@@ -2,12 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from utils.firebase_utils import init_firestore
 
-db = init_firestore()
 
 def dash_home():
-    # ---------- Estilo CSS ----------
     st.markdown("""
         <style>
             .main {
@@ -27,63 +24,75 @@ def dash_home():
         </style>
     """, unsafe_allow_html=True)
 
-    # ---------- Sidebar ----------
-    st.sidebar.image("assets/images/logo_gtd.png", use_container_width=True)
-    st.sidebar.header("Teste:")
-    st.sidebar.multiselect("Região", ["Norte", "Sul", "Centro-Oeste", "Sudeste", "Nordeste"], default=["Norte"])
-    st.sidebar.selectbox("Ano", ["2022", "2023", "2024"])
-    st.sidebar.selectbox("Tipo de Investimento", ["Privado", "Público", "Misto"])
+    # ---------- Sidebar com filtros fictícios ----------
+    st.sidebar.image("assets/images/logo_gp/gpmecatrônica.png", use_container_width=True)
+    st.sidebar.header("Filtros Temporários:")
+    st.sidebar.selectbox("Ano", ["2025", "2024", "2023", "2022"], index=2)
+    st.sidebar.selectbox("Mês", ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"], index=2)
+    st.sidebar.multiselect("Departamento", ["Pesquisa", "Extensão", "Ensino", "TI"], default=["Pesquisa"])
+    st.sidebar.slider("% de Conclusão dos Projetos", 0, 100, (30, 80))
     st.sidebar.markdown("---")
-    st.sidebar.button("Main Menu")
-    st.sidebar.button("Home", use_container_width=True)
+    st.sidebar.button("Filtrar Dados")
 
-    # ---------- Header ----------
-    st.markdown("**📁 Base de Dados: Atualizada ✅**")
-    st.markdown("### 📊 Indicadores Gerais")
+    # ---------- Título ----------
+    st.markdown("### 📊 Painel Geral de Indicadores - GP Mecatrônica")
     st.markdown("---")
 
-    # ---------- Cards ----------
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("💰 Projetos", "R$ 2.482 Bi", border=True)
-    col2.metric("📌 Tarefas Diversas", "847.300", border=True)
-    col3.metric("📈 Processos Sei", "R$ 4.96 Mi", border=True)
-    col4.metric("🏦 Demandas Portal Cidadão", "R$ 2.59 Mi", border=True)
-    col5.metric("⭐ Demandas Alpha", "3.5K", border=True)
+    # ---------- Cards de Indicadores ----------
+    col1, col2, col3 = st.columns(3)
+    col1.metric("📅 Membros Ativos", "39", border=True)
+    col2.metric("📆 Projetos em Andamento", "9", border=True)
+    col3.metric("📄 Itens Patrimoniais", "215", border=True)
+
+    col4, col5, col6 = st.columns(3)
+    col4.metric("🎈 Aniversariantes do Mês", "4", border=True)
+    col5.metric("🔒 Acessos não autorizados", "1", border=True)
+    col6.metric("⬇️ Backups Realizados", "4", border=True)
 
     st.markdown("---")
 
-    # ---------- Gráficos (dados fictícios) ----------
-    df_estado = pd.DataFrame({
-        'Estado': ['AC', 'AM', 'RO', 'PA', 'RR', 'TO', 'AP'],
-        'Investimento': [150, 300, 220, 500, 120, 80, 60]
+    # ---------- Gráficos Fictícios ----------
+    df_projetos = pd.DataFrame({
+        "Status": ["Em Andamento", "Concluídos", "Atrasados"],
+        "Quantidade": [9, 5, 1]
     })
 
-    df_tipo = pd.DataFrame({
-        'Tipo': ['Indústria', 'Agronegócio', 'Tecnologia', 'Energia', 'Comércio'],
-        'Valor': [210, 180, 160, 120, 100]
+    df_usuarios = pd.DataFrame({
+        "Perfil": ["Administrador", "Padrão", "Convidado"],
+        "Quantidade": [3, 12, 5]
     })
 
-    df_pizza = pd.DataFrame({
-        'Região': ['Norte', 'Nordeste', 'Sul', 'Sudeste', 'Centro-Oeste'],
-        'Percentual': [25, 20, 18, 22, 15]
+    df_membros = pd.DataFrame({
+        "Status": ["Ativos", "Inativos"],
+        "Total": [39, 9]
     })
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("📍 Investimento por Estado")
-        fig1 = px.line(df_estado, x='Estado', y='Investimento', markers=True)
-        st.plotly_chart(fig1, use_container_width=True)
+    col7, col8 = st.columns(2)
+    with col7:
+        st.subheader("📈 Projetos por Status")
+        fig_proj = px.bar(df_projetos, x="Status", y="Quantidade", color="Status")
+        st.plotly_chart(fig_proj, use_container_width=True)
 
-    with col2:
-        st.subheader("🏭 Investimento por Tipo de Negócio")
-        fig2 = px.bar(df_tipo, x='Valor', y='Tipo', orientation='h')
-        st.plotly_chart(fig2, use_container_width=True)
+    with col8:
+        st.subheader("🧑‍💻 Perfis de Usuários")
+        fig_user = px.pie(df_usuarios, names="Perfil", values="Quantidade", hole=0.4)
+        st.plotly_chart(fig_user, use_container_width=True)
 
-    st.subheader("🌎 Distribuição por Região")
-    fig3 = px.pie(df_pizza, values='Percentual', names='Região', hole=0.4)
-    st.plotly_chart(fig3, use_container_width=True)
+    st.subheader("🤺 Membros Ativos vs Inativos")
+    fig_membros = px.pie(df_membros, names="Status", values="Total", hole=0.3)
+    st.plotly_chart(fig_membros, use_container_width=True)
+
+    st.markdown("---")
+    
+    # ---------- Widgets Nativos para Interação Futura ----------
+    with st.expander("🔍 Ver Detalhes Técnicos do Sistema"):
+        st.text("Versão: 1.0.0-dev\nBackend: Firebase\nFrontend: Streamlit")
+        st.checkbox("Ativar modo desenvolvedor")
+        st.select_slider("Nível de acesso", options=["Visitante", "Padrão", "Administrador"])
+        st.date_input("Data da última atualização")
 
     # ---------- Rodapé ----------
     st.markdown("---")
     ano_atual = datetime.now().year
-    st.caption(f"📌 Desenvolvido por: Gerência de Transformação Digital GTD-Setic • {ano_atual} | Todos os direitos reservados")
+    st.caption(f"📌 Desenvolvido por: GP Mecatrônica - IFRO Calama • {ano_atual} ")
