@@ -27,17 +27,20 @@ def dash_home():
     # ---------- Sidebar com filtros fictícios ----------
     st.sidebar.image("assets/images/logo_gp/gpmecatrônica.png", use_container_width=True)
     st.sidebar.header("Filtros Temporários:")
-    st.sidebar.selectbox("Ano", ["2025", "2024", "2023", "2022"], index=2)
     st.sidebar.selectbox("Mês", ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    st.sidebar.selectbox("Ano", ["2025", "2024", "2023", "2022"], index=2),
                                  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"], index=2)
     st.sidebar.multiselect("Departamento", ["Pesquisa", "Extensão", "Ensino", "TI"], default=["Pesquisa"])
     st.sidebar.slider("% de Conclusão dos Projetos", 0, 100, (30, 80))
     st.sidebar.markdown("---")
-    st.sidebar.button("Filtrar Dados")
+    
+
+    
 
     # ---------- Título ----------
     st.markdown("### 📊 Painel Geral de Indicadores - GP Mecatrônica")
     st.markdown("---")
+    
 
     # ---------- Cards de Indicadores ----------
     col1, col2, col3 = st.columns(3)
