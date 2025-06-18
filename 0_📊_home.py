@@ -1,5 +1,6 @@
 import streamlit as st
 from views.dashboards.view_home_dash import dash_home
+from views.dashboards.membros.view_membros_dash import gestao_membros
 
 ###################### CONFIGURAÇÃO DA PÁGINA ######################
 st.set_page_config(
@@ -42,4 +43,6 @@ menu = st.sidebar.selectbox(
 ###################### ROTEAMENTO ######################
 if menu == "🏠 Dashboard":
     dash_home()
+elif menu == "🪪 Gestão de Membros":
+    gestao_membros()
 
