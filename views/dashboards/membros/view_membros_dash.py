@@ -7,56 +7,16 @@ import unicodedata
 def normalize_string(s):
     return unicodedata.normalize("NFKD", str(s)).encode("ASCII", "ignore").decode("utf-8").lower()
 
-def gerar_dados_ficticios():
-    return pd.DataFrame([
-        {
-            "ID": str(uuid.uuid4()),
-            "NOME": "Ana Paula Mendes",
-            "IMAGEM_USUÁRIO": "https://i.pravatar.cc/150?img=1",
-            "CPF": "123.456.789-00",
-            "EMAIL": "ana.mendes@ifro.edu.br",
-            "CONTATO": "(69) 99999-1234",
-            "LATTES": "http://lattes.cnpq.br/ana123",
-            "MATRÍCULA": "20211002001",
-            "TAMANHO CAMISETA": "M",
-            "DATA NASCIMENTO": date(2005, 8, 14),
-            "EQUIPE DE PROJETO": "Robótica",
-            "ORIENTADOR": "Prof. Carlos Lima",
-            "SÉRIE": "3º Ano",
-            "ANO": "2025",
-            "NÍVEL ESCOLARIDADE": "Ensino Médio",
-            "CURSO": "Informática",
-            "STATUS CURSO": "Cursando",
-            "ÁREAS DE INTERESSE": "IA, Robótica, WebDev",
-            "TIPO MEMBRO": "Discente",
-            "NÍVEL GP": "Avançado",
-            "STATUS": "Ativo"
+@st.cache_data
+def carregar_dados_membros():
+    return pd.read_csv(
+        "data/membros_gp/membros_gp_fakes.csv",
+        dtype={
+            "MATRÍCULA": str,
+            "ANO": str  # ← força a coluna ANO como texto
         },
-        {
-            "ID": str(uuid.uuid4()),
-            "NOME": "João Victor Silva",
-            "IMAGEM_USUÁRIO": "https://i.pravatar.cc/150?img=2",
-            "CPF": "987.654.321-00",
-            "EMAIL": "joao.silva@ifro.edu.br",
-            "CONTATO": "(69) 99999-4321",
-            "LATTES": "http://lattes.cnpq.br/joao321",
-            "MATRÍCULA": "20211002005",
-            "TAMANHO CAMISETA": "G",
-            "DATA NASCIMENTO": date(2006, 3, 21),
-            "EQUIPE DE PROJETO": "Automatização",
-            "ORIENTADOR": "Profa. Juliana Torres",
-            "SÉRIE": "2º Ano",
-            "ANO": "2025",
-            "NÍVEL ESCOLARIDADE": "Ensino Médio",
-            "CURSO": "Mecatrônica",
-            "STATUS CURSO": "Trancado",
-            "ÁREAS DE INTERESSE": "Sistemas embarcados, IA",
-            "TIPO MEMBRO": "Discente",
-            "NÍVEL GP": "Intermediário",
-            "STATUS": "Inativo"
-        }
-    ])
-
+        parse_dates=["DATA NASCIMENTO"]
+    )
 def mostrar_indicadores(df):
     st.markdown("### 📊 Indicadores Gerais")
     ativos = df[df["STATUS"] == "Ativo"].shape[0]
@@ -112,7 +72,7 @@ def gestao_membros():
     st.markdown("# 🧑‍🤝‍🧑 Lista de Membros do GP Mecatrônica")
 
     try:
-        df_original = gerar_dados_ficticios()
+        df_original = carregar_dados_membros()
         df = df_original.copy()
 
         if st.button("➕ Cadastrar Novo Membro"):
