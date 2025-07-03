@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
-import uuid
 import unicodedata
 
 def normalize_string(s):
@@ -9,38 +8,20 @@ def normalize_string(s):
 
 @st.cache_data
 def carregar_dados_membros():
-    return pd.read_csv(
-        "data/membros_gp/membros_gp_fakes.csv",
-        dtype={
-            "MATRÍCULA": str,
-            "ANO": str  # ← força a coluna ANO como texto
-        },
-        parse_dates=["DATA NASCIMENTO"]
+    df = pd.read_csv(
+        "data/membros_gp/tratados/membros_gp_tratados_utf8_limpo_final.csv",
+        dtype={"MATRÍCULA": str, "ANO": str}
     )
-def mostrar_indicadores(df):
-    st.markdown("### 📊 Indicadores Gerais")
-    ativos = df[df["STATUS"] == "Ativo"].shape[0]
-    inativos = df[df["STATUS"] == "Inativo"].shape[0]
-    pendentes = df[df["STATUS"] == "Pendente"].shape[0]
-    professores = df[df["TIPO MEMBRO"] == "Professor"].shape[0]
-    orientadores = df["ORIENTADOR"].nunique()
-    equipes = df["EQUIPE DE PROJETO"].nunique()
+    df["DATA NASCIMENTO"] = pd.to_datetime(df["DATA NASCIMENTO"], errors="coerce")
+    df["Data Cadastro"] = pd.to_datetime(df["Data Cadastro"], errors="coerce")  # 👈 Adiciona isso
+    return df
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("🟢 Ativos", ativos, border=True)
-    col2.metric("🔴 Inativos", inativos, border=True)
-    col3.metric("🟡 Pendentes", pendentes, border=True)
-
-    col4, col5, col6 = st.columns(3)
-    col4.metric("👨‍🏫 Total Professores", professores, border=True)
-    col5.metric("📘 Total Orientadores", orientadores, border=True)
-    col6.metric("👥 Total Equipes", equipes, border=True)
 
 def cadastrar_membro():
-    @st.dialog("➕ Cadastro de Membro")
+    @st.dialog("➕ Cadastro de Novo Membro")
     def modal():
         with st.form("form_membro"):
-            foto = st.file_uploader("Foto de Perfil", type=["jpg", "jpeg", "png"])
+            #data_cadastro = st.date_input("Data de Cadastro", value=date.today())
             nome = st.text_input("Nome Completo")
             cpf = st.text_input("CPF")
             email = st.text_input("Email")
@@ -57,8 +38,8 @@ def cadastrar_membro():
             curso = st.text_input("Curso")
             status_curso = st.selectbox("Status do Curso", ["Cursando", "Trancado", "Concluído"])
             interesses = st.text_area("Áreas de Interesse")
-            tipo_membro = st.selectbox("Tipo de Membro", ["Discente", "Professor"]) 
-            nivel_gp = st.selectbox("Nível no GP", ["Iniciante", "Intermediário", "Avançado"])
+            rank_gp = st.selectbox("Rank GP", ["E", "D", "C", "B", "A", "S"])
+            tipo_membro = st.selectbox("Tipo de Membro", ["Discente", "Professor"])
             status = st.selectbox("Status", ["Ativo", "Inativo", "Pendente"])
 
             enviar = st.form_submit_button("Salvar Membro")
@@ -68,24 +49,35 @@ def cadastrar_membro():
 
     modal()
 
+def mostrar_indicadores(df):
+    st.markdown("### 📊 Indicadores Gerais")
+
+    total_ativos = df[df["STATUS"] == "Ativo"].shape[0]
+    total_inativos = df[df["STATUS"] == "Inativo"].shape[0]
+    total_equipes = df["EQUIPE DE PROJETO"].nunique()
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("🟢 Ativos", total_ativos, border=True)
+    col2.metric("🔴 Inativos", total_inativos, border=True)
+    col3.metric("👥 Total de Equipes", total_equipes, border=True)
+
 def gestao_membros():
     st.markdown("# 🧑‍🤝‍🧑 Lista de Membros do GP Mecatrônica")
+
+    if st.button("➕ Cadastrar Novo Membro"):
+        cadastrar_membro()
 
     try:
         df_original = carregar_dados_membros()
         df = df_original.copy()
 
-        if st.button("➕ Cadastrar Novo Membro"):
-            cadastrar_membro()
-
-        # Filtros laterais
         st.sidebar.markdown("### 🔍 Filtros")
-        ano = st.sidebar.selectbox("📅 Ano:", options=["Todos"] + sorted(df_original["ANO"].dropna().unique().tolist()))
-        tipo = st.sidebar.selectbox("👤 Tipo de Membro:", options=["Todos"] + sorted(df_original["TIPO MEMBRO"].dropna().unique().tolist()))
-        serie = st.sidebar.selectbox("📘 Série:", options=["Todas"] + sorted(df_original["SÉRIE"].dropna().unique().tolist()))
-        curso = st.sidebar.selectbox("🎓 Curso:", options=["Todos"] + sorted(df_original["CURSO"].dropna().unique().tolist()))
-        equipe = st.sidebar.selectbox("👥 Equipe de Projeto:", options=["Todas"] + sorted(df_original["EQUIPE DE PROJETO"].dropna().unique().tolist()))
-        orientador = st.sidebar.selectbox("🧑‍🏫 Orientador:", options=["Todos"] + sorted(df_original["ORIENTADOR"].dropna().unique().tolist()))
+        ano = st.sidebar.selectbox("📅 Ano:", ["Todos"] + sorted(df["ANO"].dropna().unique().tolist()))
+        tipo = st.sidebar.selectbox("👤 Tipo de Membro:", ["Todos"] + sorted(df["TIPO MEMBRO"].dropna().unique().tolist()))
+        serie = st.sidebar.selectbox("📚 Série:", ["Todas"] + sorted(df["SÉRIE"].dropna().unique().tolist()))
+        curso = st.sidebar.selectbox("🎓 Curso:", ["Todos"] + sorted(df["CURSO"].dropna().unique().tolist()))
+        equipe = st.sidebar.selectbox("👥 Equipe de Projeto:", ["Todas"] + sorted(df["EQUIPE DE PROJETO"].dropna().unique().tolist()))
+        orientador = st.sidebar.selectbox("🧑‍🏫 Orientador:", ["Todos"] + sorted(df["ORIENTADOR"].dropna().unique().tolist()))
 
         if ano != "Todos": df = df[df["ANO"] == ano]
         if tipo != "Todos": df = df[df["TIPO MEMBRO"] == tipo]
@@ -94,7 +86,6 @@ def gestao_membros():
         if equipe != "Todas": df = df[df["EQUIPE DE PROJETO"] == equipe]
         if orientador != "Todos": df = df[df["ORIENTADOR"] == orientador]
 
-        # Campo de busca
         termo_busca = st.text_input("🔎 Buscar por nome, CPF, e-mail ou orientador:", "")
         if termo_busca:
             termo_busca_normalizado = normalize_string(termo_busca)
@@ -130,7 +121,7 @@ def gestao_membros():
                     num_rows="fixed",
                     hide_index=True,
                     column_config={
-                        "IMAGEM_USUÁRIO": st.column_config.ImageColumn("Foto"),
+                        "DATA CADASTRO": st.column_config.DateColumn("Data Cadastro", format="DD/MM/YYYY HH:mm:ss"),
                         "NOME": st.column_config.TextColumn("Nome Completo"),
                         "CPF": st.column_config.TextColumn("CPF", disabled=True),
                         "EMAIL": st.column_config.TextColumn("Email"),
@@ -138,18 +129,19 @@ def gestao_membros():
                         "LATTES": st.column_config.LinkColumn("Currículo Lattes"),
                         "MATRÍCULA": st.column_config.TextColumn("Matrícula"),
                         "TAMANHO CAMISETA": st.column_config.SelectboxColumn("Camiseta", options=["P", "M", "G", "GG"]),
-                        "DATA NASCIMENTO": st.column_config.DateColumn("Nascimento"),
+                         "DATA NASCIMENTO": st.column_config.DateColumn("Nascimento", format="DD/MM/YYYY"),
                         "EQUIPE DE PROJETO": st.column_config.TextColumn("Equipe"),
                         "ORIENTADOR": st.column_config.TextColumn("Orientador"),
                         "SÉRIE": st.column_config.TextColumn("Série"),
                         "ANO": st.column_config.TextColumn("Ano"),
-                        "STATUS": st.column_config.SelectboxColumn("Status", options=["Ativo", "Inativo", "Pendente"]),
                         "NÍVEL ESCOLARIDADE": st.column_config.SelectboxColumn("Escolaridade", options=["Ensino Médio", "Técnico", "Superior"]),
                         "CURSO": st.column_config.TextColumn("Curso"),
                         "STATUS CURSO": st.column_config.SelectboxColumn("Status Curso", options=["Cursando", "Trancado", "Concluído"]),
                         "ÁREAS DE INTERESSE": st.column_config.TextColumn("Interesses"),
                         "TIPO MEMBRO": st.column_config.SelectboxColumn("Tipo Membro", options=["Discente", "Professor"]),
-                        "NÍVEL GP": st.column_config.SelectboxColumn("Nível GP", options=["Iniciante", "Intermediário", "Avançado"])
+                        "NÍVEL GP": st.column_config.SelectboxColumn("Nível GP", options=["Iniciante", "Intermediário", "Avançado"]),
+                        "Rank GP": st.column_config.TextColumn("Rank GP"),
+                        "STATUS": st.column_config.SelectboxColumn("Status", options=["Ativo", "Inativo", "Pendente"]),
                     },
                     key=f"editor_{nome_tab}"
                 )
