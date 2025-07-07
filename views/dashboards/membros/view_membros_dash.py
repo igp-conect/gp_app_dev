@@ -9,11 +9,10 @@ def normalize_string(s):
 @st.cache_data
 def carregar_dados_membros():
     df = pd.read_csv(
-        "data/membros_gp/tratados/membros_gp_tratados_utf8_limpo_final.csv",
+        "data/membros_gp/tratados/membros_gp_tratados_.csv",
         dtype={"MATRÍCULA": str, "ANO": str}
     )
-    df["DATA NASCIMENTO"] = pd.to_datetime(df["DATA NASCIMENTO"], errors="coerce")
-    df["Data Cadastro"] = pd.to_datetime(df["Data Cadastro"], errors="coerce")  # 👈 Adiciona isso
+    df["DATA NASCIMENTO"] = pd.to_datetime(df["DATA NASCIMENTO"], errors="coerce")  # 👈 Adiciona isso
     return df
 
 
@@ -21,26 +20,50 @@ def cadastrar_membro():
     @st.dialog("➕ Cadastro de Novo Membro")
     def modal():
         with st.form("form_membro"):
-            #data_cadastro = st.date_input("Data de Cadastro", value=date.today())
-            nome = st.text_input("Nome Completo")
-            cpf = st.text_input("CPF")
-            email = st.text_input("Email")
-            contato = st.text_input("Contato")
-            lattes = st.text_input("Currículo Lattes")
-            matricula = st.text_input("Matrícula")
-            camiseta = st.selectbox("Tamanho Camiseta", ["P", "M", "G", "GG"])
-            nascimento = st.date_input("Data de Nascimento")
-            equipe = st.text_input("Equipe de Projeto")
-            orientador = st.text_input("Orientador")
-            serie = st.text_input("Série")
-            ano = st.text_input("Ano")
-            escolaridade = st.selectbox("Escolaridade", ["Ensino Médio", "Técnico", "Superior"])
-            curso = st.text_input("Curso")
-            status_curso = st.selectbox("Status do Curso", ["Cursando", "Trancado", "Concluído"])
-            interesses = st.text_area("Áreas de Interesse")
-            rank_gp = st.selectbox("Rank GP", ["E", "D", "C", "B", "A", "S"])
-            tipo_membro = st.selectbox("Tipo de Membro", ["Discente", "Professor"])
-            status = st.selectbox("Status", ["Ativo", "Inativo", "Pendente"])
+            col1, col2 = st.columns(2)
+
+            with col1:
+                nome = st.text_input("Nome Completo")
+                cpf = st.text_input("CPF")
+                email = st.text_input("Email")
+                contato = st.text_input("Contato")
+                nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY", min_value=date(1900, 1, 1), max_value=date.today())
+                equipe = st.text_input("Equipe de Projeto")
+                orientador = st.text_input("Orientador")
+                curso = st.text_input("Curso")
+
+            with col2:
+                lattes = st.text_input("Currículo Lattes")
+                matricula = st.text_input("Matrícula")
+                camiseta = st.selectbox("Tamanho Camiseta", ["P", "M", "G", "GG"])
+                serie = st.text_input("Série")
+                ano = st.text_input("Ano")
+                escolaridade = st.selectbox("Escolaridade", ["Ensino Médio", "Técnico", "Superior", "Pós-Graduação"])
+                status_curso = st.selectbox("Status do Curso", ["Cursando", "Trancado", "Concluído"])
+
+            st.markdown("#### Áreas de Interesse")
+            interesses_selecionados = []
+            areas_predefinidas = [
+                "Programação", "Robótica", "Inteligência Artificial", "Banco de Dados",
+                "Desenvolvimento Web", "Redes de Computadores", "Manutenção de Computador",
+                "Segurança da Informação", "Design Gráfico", "Análise de Dados",
+                "Automação", "IoT (Internet das Coisas)", "Engenharia de Software",
+                "Computação em Nuvem", "Eletrônica Digital"
+            ]
+            cols = st.columns(3)
+            for i, area in enumerate(areas_predefinidas):
+                if cols[i % 3].checkbox(area):
+                    interesses_selecionados.append(area)
+
+            interesses = ", ".join(interesses_selecionados)
+
+            col4, col5, col6 = st.columns(3)
+            with col4:
+                rank_gp = st.selectbox("Rank GP", ["E", "D", "C", "B", "A", "S"])
+            with col5:
+                tipo_membro = st.selectbox("Tipo de Membro", ["Discente", "Professor"])
+            with col6:
+                status = st.selectbox("Status", ["Ativo", "Inativo", "Pendente"])
 
             enviar = st.form_submit_button("Salvar Membro")
             if enviar:
@@ -48,6 +71,7 @@ def cadastrar_membro():
                 st.rerun()
 
     modal()
+
 
 def mostrar_indicadores(df):
     st.markdown("### 📊 Indicadores Gerais")
@@ -121,7 +145,7 @@ def gestao_membros():
                     num_rows="fixed",
                     hide_index=True,
                     column_config={
-                        "DATA CADASTRO": st.column_config.DateColumn("Data Cadastro", format="DD/MM/YYYY HH:mm:ss"),
+                        #"DATA CADASTRO": st.column_config.DateColumn("Data Cadastro", format="DD/MM/YYYY HH:mm:ss"),
                         "NOME": st.column_config.TextColumn("Nome Completo"),
                         "CPF": st.column_config.TextColumn("CPF", disabled=True),
                         "EMAIL": st.column_config.TextColumn("Email"),
@@ -129,17 +153,16 @@ def gestao_membros():
                         "LATTES": st.column_config.LinkColumn("Currículo Lattes"),
                         "MATRÍCULA": st.column_config.TextColumn("Matrícula"),
                         "TAMANHO CAMISETA": st.column_config.SelectboxColumn("Camiseta", options=["P", "M", "G", "GG"]),
-                         "DATA NASCIMENTO": st.column_config.DateColumn("Nascimento", format="DD/MM/YYYY"),
+                         "DATA NASCIMENTO": st.column_config.DateColumn("Nascimento", format="DD/MM/YYYY" ),
                         "EQUIPE DE PROJETO": st.column_config.TextColumn("Equipe"),
                         "ORIENTADOR": st.column_config.TextColumn("Orientador"),
                         "SÉRIE": st.column_config.TextColumn("Série"),
                         "ANO": st.column_config.TextColumn("Ano"),
-                        "NÍVEL ESCOLARIDADE": st.column_config.SelectboxColumn("Escolaridade", options=["Ensino Médio", "Técnico", "Superior"]),
+                        "NÍVEL ESCOLARIDADE": st.column_config.SelectboxColumn("Escolaridade", options=["Ensino médio", "Graduação", "Pós-Graduação"]),
                         "CURSO": st.column_config.TextColumn("Curso"),
                         "STATUS CURSO": st.column_config.SelectboxColumn("Status Curso", options=["Cursando", "Trancado", "Concluído"]),
                         "ÁREAS DE INTERESSE": st.column_config.TextColumn("Interesses"),
                         "TIPO MEMBRO": st.column_config.SelectboxColumn("Tipo Membro", options=["Discente", "Professor"]),
-                        "NÍVEL GP": st.column_config.SelectboxColumn("Nível GP", options=["Iniciante", "Intermediário", "Avançado"]),
                         "Rank GP": st.column_config.TextColumn("Rank GP"),
                         "STATUS": st.column_config.SelectboxColumn("Status", options=["Ativo", "Inativo", "Pendente"]),
                     },
@@ -147,7 +170,7 @@ def gestao_membros():
                 )
 
         st.markdown("---")
-        st.caption(f"📌 Desenvolvido por: GP Mecatrônica - IFRO Calama • {date.today().year}")
+        st.caption(f"📌 Desenvolvido por: Equipe Vingadores --- GP Mecatrônica - IFRO Calama • {date.today().year}")
 
     except Exception as e:
         st.error(f"Erro ao carregar dados: {e}")
